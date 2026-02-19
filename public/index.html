@@ -9,6 +9,10 @@
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
     <style>
         :root {
             --route-pink: #FF2D85;
@@ -575,10 +579,185 @@
             color: var(--text-dim);
         }
 
+        /* Voting table */
+        .vote-card {
+            --card-glow: var(--route-lime);
+            box-shadow: 0 0 50px -18px rgba(179, 255, 0, 0.12);
+            padding: 0;
+            overflow: hidden;
+        }
+        .vote-card-header {
+            padding: 28px 32px 20px;
+        }
+        .vote-card-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
+        }
+        .vote-card-header p {
+            font-size: 0.92rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .vote-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .vote-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+        .vote-table thead th {
+            padding: 10px 16px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky;
+            top: 0;
+            background: rgba(10,10,10,0.95);
+            backdrop-filter: blur(8px);
+        }
+        .vote-table thead th.col-vote {
+            text-align: center;
+            width: 100px;
+        }
+        .vote-table tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.15s, opacity 0.3s;
+        }
+        .vote-table tbody tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        .vote-table tbody tr.vetoed {
+            opacity: 0.25;
+        }
+        .vote-table td {
+            padding: 10px 16px;
+            vertical-align: middle;
+        }
+        .vote-track-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .vote-art {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.05);
+        }
+        .vote-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .vote-track-info { min-width: 0; }
+        .vote-track-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.92rem;
+        }
+        .vote-track-name a { color: inherit; text-decoration: none; }
+        .vote-track-name a:hover { color: var(--route-mint); }
+        .vote-artist {
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .vote-cell { text-align: center; }
+        .vote-cb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .vote-cb:hover {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.06);
+        }
+        .vote-cb:checked {
+            background: rgba(255, 45, 133, 0.15);
+            border-color: var(--route-pink);
+        }
+        .vote-cb:checked::after {
+            content: '✕';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--route-pink);
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .vote-loading {
+            padding: 48px 32px;
+            text-align: center;
+            font-size: 0.92rem;
+            color: var(--text-dim);
+        }
+        .vote-legend {
+            padding: 14px 32px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: 0.82rem;
+            color: var(--text-dim);
+        }
+        .vote-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .vote-legend-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        .vote-legend-swatch.swatch-out {
+            background: rgba(255, 45, 133, 0.15);
+            border: 1.5px solid var(--route-pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: var(--route-pink);
+        }
+        .vote-legend-swatch.swatch-in {
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,255,255,0.15);
+        }
+
         @media (max-width: 640px) {
             .container { padding: 40px 20px 80px; }
             .card { padding: 24px 20px; }
             .why-grid, .explore-meta { grid-template-columns: 1fr; }
+            .vote-card-header { padding: 20px 20px 14px; }
+            .vote-legend { padding: 12px 20px; }
         }
     </style>
 </head>
@@ -764,9 +943,36 @@
         </div>
     </section>
 
-    <!-- 04: TIMELINE -->
+    <!-- 04: TRACK SHORTLIST VOTING -->
     <section>
-        <div class="section-label amber">04 — Timeline: working backwards</div>
+        <div class="section-label lime">04 — Track shortlist</div>
+        <p class="prose">
+            These are the tracks we're exploring as potential remix candidates. <strong>Tick the ✕ to knock a track out</strong> — votes are shared live, so everyone sees the same list. Tracks vetoed by both parties drop to the bottom.
+        </p>
+        <div class="card vote-card">
+            <div class="vote-card-header">
+                <h3>Remix Candidates</h3>
+                <p>Pulled live from the shared Spotify playlist. Add tracks to the playlist and they'll appear here automatically.</p>
+            </div>
+            <div id="voteTableWrap" class="vote-table-wrap">
+                <div class="vote-loading" id="voteLoading">Loading tracks from playlist…</div>
+            </div>
+            <div class="vote-legend">
+                <div class="vote-legend-item">
+                    <div class="vote-legend-swatch swatch-out">✕</div>
+                    <span>Knocked out</span>
+                </div>
+                <div class="vote-legend-item">
+                    <div class="vote-legend-swatch swatch-in"></div>
+                    <span>Still in</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 05: TIMELINE -->
+    <section>
+        <div class="section-label amber">05 — Timeline: working backwards</div>
         <div class="card timeline-card">
             <div class="timeline">
                 <div class="tl-item urgent">
@@ -809,9 +1015,9 @@
         </div>
     </section>
 
-    <!-- 04.5: THE CASE FOR ANCHORING -->
+    <!-- 06: THE CASE FOR ANCHORING -->
     <section>
-        <div class="section-label mint">05 — Why anchoring makes sense</div>
+        <div class="section-label mint">06 — Why anchoring makes sense</div>
         <div class="card" style="--card-glow: var(--route-mint); box-shadow: 0 0 60px -20px rgba(0, 245, 160, 0.15);">
 
             <p class="anchor-body" style="margin-bottom: 16px;">
@@ -846,9 +1052,9 @@
         </div>
     </section>
 
-    <!-- 06: NEXT STEPS -->
+    <!-- 07: NEXT STEPS -->
     <section>
-        <div class="section-label lime">06 — Next steps</div>
+        <div class="section-label lime">07 — Next steps</div>
         <div class="card next-card">
             <h3>What Happens Now</h3>
             <ul class="next-list">
@@ -880,6 +1086,7 @@
 </div>
 
 <script>
+// ---- iTunes artwork for hero player ----
 fetch('https://itunes.apple.com/search?term=pon+de+floor+major+lazer&media=music&limit=3')
     .then(r => r.json())
     .then(data => {
@@ -892,6 +1099,132 @@ fetch('https://itunes.apple.com/search?term=pon+de+floor+major+lazer&media=music
             art.innerHTML = '<img src="' + url + '" alt="Artwork" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block;">';
         }
     }).catch(() => {});
+
+// ---- Firebase config ----
+// REPLACE these values with your Firebase project config
+const firebaseConfig = {
+    apiKey: "AIzaSyAZMtHuLKZX_AVXvzWpfsJyls-cGKHs01U",
+    authDomain: "tombolatracks.firebaseapp.com",
+    databaseURL: "https://tombolatracks-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "tombolatracks",
+    storageBucket: "tombolatracks.firebasestorage.app",
+    messagingSenderId: "747702313465",
+    appId: "1:747702313465:web:07a3c305541ef50e5d9d28"
+};
+
+let db = null;
+let votesRef = null;
+
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    votesRef = db.ref('tombola/votes');
+} catch (e) {
+    console.warn('Firebase not configured — voting will be local only', e);
+}
+
+// ---- Track voting table ----
+const PARTIES = ['Meanwhile', 'BRB'];
+const voteWrap = document.getElementById('voteTableWrap');
+const voteLoading = document.getElementById('voteLoading');
+let tracksData = [];
+let votesData = {};
+
+function renderTable() {
+    if (!tracksData.length) {
+        voteLoading.textContent = 'No tracks found in playlist';
+        return;
+    }
+
+    // Sort: vetoed tracks (both parties) to bottom
+    const sorted = [...tracksData].sort((a, b) => {
+        const aVetoed = PARTIES.every(p => votesData[a.id] && votesData[a.id][p]);
+        const bVetoed = PARTIES.every(p => votesData[b.id] && votesData[b.id][p]);
+        if (aVetoed && !bVetoed) return 1;
+        if (!aVetoed && bVetoed) return -1;
+        return 0;
+    });
+
+    let html = '<table class="vote-table">';
+    html += '<thead><tr>';
+    html += '<th>Track</th>';
+    PARTIES.forEach(p => {
+        html += '<th class="col-vote">' + p + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    sorted.forEach(track => {
+        const allVetoed = PARTIES.every(p => votesData[track.id] && votesData[track.id][p]);
+        html += '<tr class="' + (allVetoed ? 'vetoed' : '') + '">';
+        
+        // Track cell
+        html += '<td><div class="vote-track-cell">';
+        html += '<div class="vote-art">';
+        if (track.artwork) {
+            html += '<img src="' + track.artwork + '" alt="" loading="lazy">';
+        }
+        html += '</div>';
+        html += '<div class="vote-track-info">';
+        html += '<div class="vote-track-name"><a href="' + track.spotifyUrl + '" target="_blank" rel="noopener">' + track.name + '</a></div>';
+        html += '<div class="vote-artist">' + track.artists + '</div>';
+        html += '</div></div></td>';
+
+        // Vote cells
+        PARTIES.forEach(party => {
+            const checked = votesData[track.id] && votesData[track.id][party] ? 'checked' : '';
+            html += '<td class="vote-cell">';
+            html += '<input type="checkbox" class="vote-cb" data-track="' + track.id + '" data-party="' + party + '" ' + checked + '>';
+            html += '</td>';
+        });
+
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    voteWrap.innerHTML = html;
+
+    // Attach checkbox listeners
+    voteWrap.querySelectorAll('.vote-cb').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const trackId = this.dataset.track;
+            const party = this.dataset.party;
+            const isOut = this.checked;
+
+            if (!votesData[trackId]) votesData[trackId] = {};
+            votesData[trackId][party] = isOut;
+
+            if (votesRef) {
+                votesRef.child(trackId).child(party).set(isOut);
+            }
+
+            // Re-render to move vetoed tracks
+            setTimeout(renderTable, 200);
+        });
+    });
+}
+
+// Fetch tracks from API
+fetch('/api/tracks')
+    .then(r => {
+        if (!r.ok) throw new Error('API error');
+        return r.json();
+    })
+    .then(data => {
+        tracksData = data.tracks || [];
+        renderTable();
+    })
+    .catch(err => {
+        console.warn('API fetch failed, using fallback', err);
+        voteLoading.textContent = 'Could not load playlist — check API configuration';
+    });
+
+// Listen for Firebase vote changes
+if (votesRef) {
+    votesRef.on('value', snap => {
+        votesData = snap.val() || {};
+        if (tracksData.length) renderTable();
+    });
+}
 </script>
 </body>
 </html>
