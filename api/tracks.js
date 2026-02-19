@@ -22,18 +22,20 @@ export default async function handler(req, res) {
     });
 
     if (!tokenRes.ok) {
-      return res.status(500).json({ error: 'Token request failed' });
+      const errBody = await tokenRes.text();
+      return res.status(500).json({ error: 'Token request failed', status: tokenRes.status, detail: errBody });
     }
 
     const tokenData = await tokenRes.json();
 
     const playlistRes = await fetch(
-      `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?fields=items(track(id,name,artists(name),album(images),external_urls,duration_ms))&limit=100`,
+      `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?limit=100`,
       { headers: { 'Authorization': 'Bearer ' + tokenData.access_token } }
     );
 
     if (!playlistRes.ok) {
-      return res.status(500).json({ error: 'Playlist fetch failed' });
+      const errBody = await playlistRes.text();
+      return res.status(500).json({ error: 'Playlist fetch failed', status: playlistRes.status, detail: errBody });
     }
 
     const playlistData = await playlistRes.json();
