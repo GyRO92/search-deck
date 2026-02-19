@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tombola — Music Direction Check-In</title>
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --route-pink: #FF2D85;
+            --route-mint: #00F5A0;
+            --route-cyan: #00D2FF;
+            --route-lime: #B3FF00;
+            --route-amber: #FFB800;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --text-primary: rgba(255, 255, 255, 0.92);
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --text-dim: rgba(255, 255, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: var(--text-primary);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page-aurora {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .page-aurora span {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+        }
+        .page-aurora .a1 { width: 700px; height: 700px; top: -250px; left: -200px; background: var(--route-pink); opacity: 0.10; }
+        .page-aurora .a2 { width: 600px; height: 600px; bottom: 20%; right: -150px; background: var(--route-cyan); opacity: 0.08; }
+        .page-aurora .a3 { width: 500px; height: 500px; top: 55%; left: 30%; background: var(--route-mint); opacity: 0.04; }
+        .page-aurora .a4 { width: 400px; height: 400px; top: 80%; left: -100px; background: var(--route-lime); opacity: 0.05; }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 60px 32px 100px;
+        }
+
+        /* Header */
+        .page-header { margin-bottom: 64px; }
+        .page-header .eyebrow {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--route-cyan);
+            margin-bottom: 16px;
+        }
+        .page-header h1 {
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+        .header-rule {
+            height: 3px;
+            width: 100px;
+            background: linear-gradient(90deg, var(--route-pink), var(--route-cyan));
+            margin-bottom: 20px;
+        }
+        .page-header .date {
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+
+        /* Sections */
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .section-label.pink { color: var(--route-pink); }
+        .section-label.mint { color: var(--route-mint); }
+        .section-label.cyan { color: var(--route-cyan); }
+        .section-label.lime { color: var(--route-lime); }
+        .section-label.amber { color: var(--route-amber); }
+
+        section { margin-bottom: 64px; }
+
+        .prose {
+            font-size: 0.88rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        .prose strong { font-weight: 500; color: var(--text-primary); }
+
+        /* Cards */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(180deg, var(--card-glow, rgba(255,255,255,0.08)), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Common ground */
+        .established-card {
+            --card-glow: var(--route-mint);
+            box-shadow: 0 0 60px -20px rgba(0, 245, 160, 0.15);
+        }
+        .established-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+            margin-bottom: 20px;
+        }
+        .established-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .established-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.88rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+        .check {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(0, 245, 160, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+        }
+        .check svg { width: 11px; height: 11px; }
+
+        /* Spotify player */
+        .spotify-player {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 300px;
+            z-index: 5;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .spotify-fallback {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: #181818;
+            border-radius: 12px;
+            height: 80px;
+            box-sizing: border-box;
+        }
+        .sf-art {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--route-pink);
+            flex-shrink: 0;
+        }
+        .sf-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .sf-track {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sf-artist {
+            font-size: 0.68rem;
+            font-weight: 400;
+            color: rgba(255,255,255,0.4);
+        }
+        .sf-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: #1DB954;
+            color: #000;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: transform 0.15s, background 0.2s;
+        }
+        .sf-link:hover { background: #1ed760; transform: scale(1.03); }
+
+        @media (max-width: 640px) {
+            .spotify-player {
+                position: relative;
+                top: auto;
+                right: auto;
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Track to beat card */
+        .anchor-card {
+            --card-glow: var(--route-pink);
+            box-shadow: 0 0 60px -18px rgba(255, 45, 133, 0.25);
+            margin-bottom: 24px;
+        }
+        .anchor-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            padding-top: 0;
+        }
+        @media (min-width: 641px) {
+            .anchor-header { padding-right: 320px; }
+        }
+        .anchor-badge {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 4px;
+            background: rgba(255, 45, 133, 0.15);
+            color: var(--route-pink);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .anchor-card h3 {
+            font-size: 1.3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        .anchor-card .anchor-subtitle {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .anchor-body {
+            font-size: 0.88rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        .anchor-body strong { font-weight: 500; color: var(--text-primary); }
+
+        .assumptions {
+            background: rgba(255, 45, 133, 0.04);
+            border-radius: 10px;
+            border-left: 2px solid rgba(255, 45, 133, 0.3);
+            padding: 18px 20px;
+            margin-bottom: 24px;
+        }
+        .assumptions .assumptions-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--route-pink);
+            margin-bottom: 10px;
+        }
+        .assumptions p {
+            font-size: 0.84rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .assumptions p:last-child { margin-bottom: 0; }
+        .assumptions strong { font-weight: 500; color: var(--text-primary); }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .why-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 16px 18px;
+        }
+        .why-item .why-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .why-item .why-value {
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Spotify embed area */
+        .spotify-section {
+            margin-top: 28px;
+        }
+        .spotify-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+        .spotify-embed {
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
+        }
+        .spotify-embed iframe {
+            display: block;
+            width: 100%;
+            border: none;
+        }
+        .spotify-placeholder {
+            padding: 24px;
+            text-align: center;
+            font-size: 0.82rem;
+            font-weight: 300;
+            color: var(--text-dim);
+            border: 1px dashed rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+        .spotify-placeholder a {
+            color: var(--route-mint);
+            text-decoration: none;
+        }
+
+        /* Parallel exploration card */
+        .explore-card {
+            --card-glow: var(--route-cyan);
+            box-shadow: 0 0 50px -18px rgba(0, 210, 255, 0.2);
+        }
+        .explore-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .explore-badge {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 4px;
+            background: rgba(0, 210, 255, 0.12);
+            color: var(--route-cyan);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .explore-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+        }
+        .explore-body {
+            font-size: 0.85rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        .explore-body strong { font-weight: 500; color: var(--text-primary); }
+
+        .explore-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .meta-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+        .meta-item .meta-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .meta-item .meta-value {
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .explore-note {
+            margin-top: 20px;
+            padding: 16px 18px;
+            background: rgba(0, 210, 255, 0.04);
+            border-radius: 8px;
+            border-left: 2px solid rgba(0, 210, 255, 0.3);
+            font-size: 0.82rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .explore-note strong { font-weight: 500; color: var(--text-primary); }
+
+        /* Timeline */
+        .timeline-card {
+            --card-glow: var(--route-amber);
+            box-shadow: 0 0 60px -20px rgba(255, 184, 0, 0.12);
+        }
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 8px;
+            bottom: 8px;
+            width: 1px;
+            background: linear-gradient(180deg, var(--route-amber), rgba(255,184,0,0.1));
+        }
+        .tl-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .tl-item:last-child { margin-bottom: 0; }
+        .tl-dot {
+            position: absolute;
+            left: -25px;
+            top: 5px;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--route-amber);
+            box-shadow: 0 0 10px rgba(255, 184, 0, 0.4);
+        }
+        .tl-item.urgent .tl-dot {
+            background: var(--route-pink);
+            box-shadow: 0 0 10px rgba(255, 45, 133, 0.5);
+        }
+        .tl-date {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--route-amber);
+            margin-bottom: 4px;
+        }
+        .tl-item.urgent .tl-date { color: var(--route-pink); }
+        .tl-desc {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .tl-note {
+            font-size: 0.78rem;
+            font-weight: 300;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Next steps */
+        .next-card {
+            --card-glow: var(--route-lime);
+            box-shadow: 0 0 50px -18px rgba(179, 255, 0, 0.15);
+        }
+        .next-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+            margin-bottom: 20px;
+        }
+        .next-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .next-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.85rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+        .next-num {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(179, 255, 0, 0.1);
+            color: var(--route-lime);
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+        }
+        .next-list li strong { font-weight: 500; color: var(--text-primary); }
+
+        .page-footer {
+            margin-top: 80px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 40px 20px 80px; }
+            .card { padding: 24px 20px; }
+            .why-grid, .explore-meta { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-aurora">
+    <span class="a1"></span>
+    <span class="a2"></span>
+    <span class="a3"></span>
+    <span class="a4"></span>
+</div>
+
+<div class="container">
+
+    <header class="page-header">
+        <div class="eyebrow">GAS Music × Meanwhile × BRB</div>
+        <h1>Tombola Music<br>Direction Check-In</h1>
+        <div class="header-rule"></div>
+        <div class="date">February 2025 — Internal working document</div>
+    </header>
+
+    <!-- 01: COMMON GROUND -->
+    <section>
+        <div class="section-label mint">01 — What we've established</div>
+        <div class="card established-card">
+            <h3>Common Ground</h3>
+            <ul class="established-list">
+                <li>
+                    <span class="check"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L5 9l4.5-6" stroke="#00F5A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>The music needs attitude, boldness and energy — something that makes you want to move</span>
+                </li>
+                <li>
+                    <span class="check"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L5 9l4.5-6" stroke="#00F5A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>Movement style is body-pop / breakbeat / hip-hop influenced — choreography needs syncopation and complexity, not four-on-the-floor</span>
+                </li>
+                <li>
+                    <span class="check"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L5 9l4.5-6" stroke="#00F5A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>The comedy comes from everyday people performing surprisingly cool moves — the music should take itself seriously to enable that contrast</span>
+                </li>
+                <li>
+                    <span class="check"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L5 9l4.5-6" stroke="#00F5A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>We're targeting the <strong>cool</strong> end of the matrix — away from cheesy and mainstream</span>
+                </li>
+                <li>
+                    <span class="check"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L5 9l4.5-6" stroke="#00F5A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>Lyrics don't need to reference gambling or the brand — a loose sense of energy and release is fine; literal associations could create problems</span>
+                </li>
+                <li>
+                    <span class="check"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L5 9l4.5-6" stroke="#00F5A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>Format is 2×30s — the track needs to hit hard and have moments to respond to, not build over 60 seconds</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 02: THE TRACK TO BEAT -->
+    <section>
+        <div class="section-label pink">02 — The track to beat</div>
+
+        <p class="prose">
+            On our last call, everyone responded to Pon De Floor. The directors said it sits exactly where they want to be — cool, bold, eccentric, with the kind of intensity that makes the comedy land. It has the rhythmic complexity the choreography needs. It communicates the idea immediately: picture normal people at a bus stop getting down to this track, and you get the film.
+        </p>
+        <p class="prose">
+            Right now, this is the strongest thing on the table. So rather than continuing to search in every direction at once, we're proposing to <strong>use Pon De Floor as our working anchor</strong> — the track we plan around, test against, and hold everything else up to.
+        </p>
+
+        <div class="card anchor-card" style="position: relative;">
+
+            <!-- Spotify Player -->
+            <div class="spotify-player" id="spotifyPlayer">
+                <div class="spotify-fallback">
+                    <div class="sf-art">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+                    </div>
+                    <div class="sf-info">
+                        <div class="sf-track">Pon De Floor</div>
+                        <div class="sf-artist">Major Lazer, Vybz Kartel</div>
+                    </div>
+                    <a class="sf-link" href="https://open.spotify.com/track/3S7hj7i6ibxRbpKkXJtio3" target="_blank" rel="noopener">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        Play
+                    </a>
+                </div>
+            </div>
+
+            <div class="anchor-header">
+                <span class="anchor-badge">Track to Beat</span>
+                <div>
+                    <h3>Pon De Floor</h3>
+                    <div class="anchor-subtitle">Major Lazer</div>
+                </div>
+            </div>
+
+            <div class="assumptions">
+                <div class="assumptions-title">Working assumption</div>
+                <p>We're working as if this will be the track, <strong>unless</strong>:</p>
+                <p><strong>a)</strong> Something else comes along that everyone agrees beats it — in which case, great, that's the point of continuing to explore</p>
+                <p><strong>b)</strong> The rightsholders don't approve or the cost doesn't land within budget</p>
+                <p>This gives us a defined starting point for BPM, style, publisher outreach, and choreography prep — while keeping the door open.</p>
+            </div>
+
+            <p class="anchor-body">
+                This is the simplest, fastest, and creatively strongest option we've found so far. The track already does everything we need: it's bold, it's got attitude, it has the breakbeat energy the choreography demands, and it sits firmly in the cool/obscure quadrant. All the comedic contrast lives in the visuals — uncool people dancing to an unapologetically cool track. The music takes itself seriously, which is what makes it funny.
+            </p>
+
+            <div class="why-grid">
+                <div class="why-item">
+                    <div class="why-label">Timeline</div>
+                    <div class="why-value">Fastest route. Once cleared, the choreographer has a locked track to work to immediately</div>
+                </div>
+                <div class="why-item">
+                    <div class="why-label">Choreography</div>
+                    <div class="why-value">Full certainty. Moves can be built to specific moments and flourishes — this is where the real impact comes from</div>
+                </div>
+                <div class="why-item">
+                    <div class="why-label">Creative</div>
+                    <div class="why-value">The contrast is entirely in the film. One joke, done well — no dilution from trying to do it in the music too</div>
+                </div>
+                <div class="why-item">
+                    <div class="why-label">Licensing</div>
+                    <div class="why-value">4 publishers (BMG, UMP, Jack Russell, Cobalt). Already contacted — waiting on pricing</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 03: PARALLEL EXPLORATION -->
+    <section>
+        <div class="section-label cyan">03 — Parallel exploration: the famous track remix</div>
+
+        <p class="prose">
+            Alongside Pon De Floor, there's an appetite to explore whether a more widely recognised song could be remixed into the same world — bringing mainstream fame to the sound while keeping the attitude and style intact. We think that's worth exploring in parallel, with one important anchor: <strong>the style reference for any remix is Pon De Floor.</strong>
+        </p>
+
+        <div class="card explore-card">
+            <div class="explore-header">
+                <span class="explore-badge">Parallel Path</span>
+                <h3>Famous Song × Pon De Floor Style</h3>
+            </div>
+
+            <p class="explore-body">
+                If a famous track is going to be remixed and still deliver the recognition the client is looking for, it has to be <strong>so iconic that it's recognisable even when it sounds completely different.</strong> The remix strips away the original production, arrangement and feel — so the melody or hook needs to survive on its own. That narrows the field, but it also focuses the search: we're not looking at every famous song, just the ones that would still be identifiable through the filter of Pon De Floor's energy and style.
+            </p>
+
+            <div class="explore-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Timeline impact</div>
+                    <div class="meta-value">Adds 2–3 weeks for remix production. Final mix may arrive in post. Choreography can rehearse to Pon De Floor as a style stand-in</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Client sell</div>
+                    <div class="meta-value">Strongest fame angle — recognisable song plus potentially a named producer gives a clear story</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Creative consideration</div>
+                    <div class="meta-value">If the music itself contains a familiar-made-cool transformation, it may compete with the same contrast playing out in the visuals rather than reinforcing it</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Licensing</div>
+                    <div class="meta-value">More complex — original track clearance plus remix rights, and gambling-brand association can be harder with a well-known song</div>
+                </div>
+            </div>
+
+            <div class="explore-note">
+                <strong>The filter for this search:</strong> any famous track we consider needs to pass a simple test — would you still recognise it if it sounded like Pon De Floor? If not, the fame angle doesn't survive the remix, and we're better off with the original.
+            </div>
+
+            <div class="spotify-section">
+                <div class="spotify-label">Listen — Possible remix candidates</div>
+                <div class="spotify-embed">
+                    <iframe 
+                        src="https://open.spotify.com/embed/playlist/4VJIBPWs8k49fofjJiRhLc?utm_source=generator&theme=0" 
+                        width="100%" 
+                        height="352" 
+                        frameBorder="0" 
+                        allowfullscreen="" 
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                        loading="lazy"
+                        style="border-radius: 12px; display: block;">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 04: TIMELINE -->
+    <section>
+        <div class="section-label amber">04 — Timeline: working backwards</div>
+        <div class="card timeline-card">
+            <div class="timeline">
+                <div class="tl-item urgent">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">Now</div>
+                    <div class="tl-desc">Pon De Floor is the working anchor — BPM locked to ~130, style reference locked, publisher outreach live</div>
+                    <div class="tl-note">Everything else is measured against this</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">By Monday</div>
+                    <div class="tl-desc">GAS shares Pon De Floor licensing costs and availability</div>
+                    <div class="tl-note">Already in progress — 4 publishers contacted</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">By Monday</div>
+                    <div class="tl-desc">All parties contribute to shared playlists — tracks in the Pon De Floor world, and famous tracks that could survive the remix filter</div>
+                    <div class="tl-note">Via Google Doc and Spotify. Aim to narrow by mid-week</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">Mid next week</div>
+                    <div class="tl-desc">Present recommendation to Tombola client</div>
+                    <div class="tl-note">With clear rationale — not an open question but a confident direction</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">~3 weeks from now</div>
+                    <div class="tl-desc">Choreography rehearsals begin</div>
+                    <div class="tl-note">Track must be locked — or Pon De Floor used as the rehearsal track while remix is in production</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">If remix route wins</div>
+                    <div class="tl-desc">Add 2–3 weeks for remix production</div>
+                    <div class="tl-note">Final mix likely arrives in post</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 04.5: THE CASE FOR ANCHORING -->
+    <section>
+        <div class="section-label mint">05 — Why anchoring makes sense</div>
+        <div class="card" style="--card-glow: var(--route-mint); box-shadow: 0 0 60px -20px rgba(0, 245, 160, 0.15);">
+
+            <p class="anchor-body" style="margin-bottom: 16px;">
+                Everyone on the call responded to Pon De Floor. The directors like it. The agency likes it. We like it. It has the right feel, the right attitude, and a tempo and groove that are genuinely useful for choreography and shot-planning. That's rare — and it's already in front of us.
+            </p>
+            <p class="anchor-body" style="margin-bottom: 16px;">
+                The wisest thing we can do right now is <strong>treat it as the track unless something beats it.</strong> This isn't about closing down options — it's about reducing risk. Even in a worst-case scenario where we can't license it and we don't land on a famous song or a remix producer in time, we still have a locked tempo, groove and style reference that we can choreograph to, cut to, and replace with another track that lives in the same world.
+            </p>
+            <p class="anchor-body" style="margin-bottom: 28px;">
+                Anchoring to Pon De Floor simplifies everything downstream:
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="why-item">
+                    <div class="why-label" style="color: var(--route-mint);">01 — Focused song search</div>
+                    <div class="why-value">If we're exploring famous tracks to remix, we already know the style they need to work in. Every candidate gets measured against the Pon De Floor filter</div>
+                </div>
+                <div class="why-item">
+                    <div class="why-label" style="color: var(--route-mint);">02 — Narrower talent search</div>
+                    <div class="why-value">The producer shortlist becomes specific — we're looking for people who suit this vibe, not casting a wide net across every genre</div>
+                </div>
+                <div class="why-item">
+                    <div class="why-label" style="color: var(--route-mint);">03 — Built-in safety net</div>
+                    <div class="why-value">If we don't agree on a famous song, or a producer falls through, or licensing doesn't land — we still have a track that works. No scramble</div>
+                </div>
+                <div class="why-item">
+                    <div class="why-label" style="color: var(--route-mint);">04 — Shoot prep starts now</div>
+                    <div class="why-value">The choreographer and the shoot team can begin preparing with confidence — the tempo, groove and style reference are locked regardless of which track ultimately makes the final cut</div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 06: NEXT STEPS -->
+    <section>
+        <div class="section-label lime">06 — Next steps</div>
+        <div class="card next-card">
+            <h3>What Happens Now</h3>
+            <ul class="next-list">
+                <li>
+                    <span class="next-num">1</span>
+                    <span><strong>GAS delivers Pon De Floor licensing costs and availability by Monday.</strong> If there's a dealbreaker on rights or budget, we'll know early and can pivot.</span>
+                </li>
+                <li>
+                    <span class="next-num">2</span>
+                    <span><strong>Everyone feeds into the playlists.</strong> Tracks that live in the same world as Pon De Floor, and famous tracks you think could survive a remix in that style. We'll compile via shared Google Doc and Spotify.</span>
+                </li>
+                <li>
+                    <span class="next-num">3</span>
+                    <span><strong>BRB: quick yes/no pass on the existing lists.</strong> Help us cut fast — anything that doesn't fit the choreography and the tone, cross it off.</span>
+                </li>
+                <li>
+                    <span class="next-num">4</span>
+                    <span><strong>Regroup early next week</strong> to finalise what goes to the client. The goal is a confident recommendation, not a menu.</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <footer class="page-footer">
+        <span>GAS Music</span>
+        <span>Tombola — Music Direction</span>
+    </footer>
+
+</div>
+
+<script>
+fetch('https://itunes.apple.com/search?term=pon+de+floor+major+lazer&media=music&limit=3')
+    .then(r => r.json())
+    .then(data => {
+        const t = data.results && data.results.find(r => 
+            (r.trackName || '').toLowerCase().includes('pon de floor')
+        );
+        if (t && t.artworkUrl100) {
+            const art = document.querySelector('.sf-art');
+            const url = t.artworkUrl100.replace('100x100', '200x200');
+            art.innerHTML = '<img src="' + url + '" alt="Artwork" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block;">';
+        }
+    }).catch(() => {});
+</script>
+</body>
+</html>
