@@ -952,7 +952,7 @@
         <div class="card vote-card">
             <div class="vote-card-header">
                 <h3>Remix Candidates</h3>
-                <p>Pulled live from the shared Spotify playlist. Add tracks to the playlist and they'll appear here automatically.</p>
+                <p>From the shared Spotify playlist — <a href="https://open.spotify.com/playlist/4VJIBPWs8k49fofjJiRhLc" target="_blank" rel="noopener" style="color:var(--route-mint);text-decoration:none;">Tom's Famous Tracks</a></p>
             </div>
             <div id="voteTableWrap" class="vote-table-wrap">
                 <div class="vote-loading" id="voteLoading">Loading tracks from playlist…</div>
@@ -1123,19 +1123,37 @@ try {
     console.warn('Firebase not configured — voting will be local only', e);
 }
 
-// ---- Track voting table ----
+// ---- Track data (from Spotify playlist: Tom's Famous Tracks) ----
+const tracksData = [
+    { id: "t01", name: "Stayin' Alive - Serban Mix", artists: "Bee Gees", spotifyUrl: "https://open.spotify.com/search/Stayin%20Alive%20Serban%20Mix%20Bee%20Gees" },
+    { id: "t02", name: "Get Down Saturday Night", artists: "Oliver Cheatham", spotifyUrl: "https://open.spotify.com/search/Get%20Down%20Saturday%20Night%20Oliver%20Cheatham" },
+    { id: "t03", name: "Gimme! Gimme! Gimme! (A Man After Midnight)", artists: "ABBA", spotifyUrl: "https://open.spotify.com/search/Gimme%20Gimme%20Gimme%20ABBA" },
+    { id: "t04", name: "Get the Party Started", artists: "P!nk", spotifyUrl: "https://open.spotify.com/search/Get%20The%20Party%20Started%20Pink" },
+    { id: "t05", name: "Jump (For My Love)", artists: "The Pointer Sisters", spotifyUrl: "https://open.spotify.com/search/Jump%20For%20My%20Love%20Pointer%20Sisters" },
+    { id: "t06", name: "Music Sounds Better With You", artists: "Stardust, Benjamin Diamond", spotifyUrl: "https://open.spotify.com/search/Music%20Sounds%20Better%20With%20You%20Stardust" },
+    { id: "t07", name: "Lady - Hear Me Tonight", artists: "Modjo", spotifyUrl: "https://open.spotify.com/search/Lady%20Hear%20Me%20Tonight%20Modjo" },
+    { id: "t08", name: "I'm Coming Out - Original CHIC Mix", artists: "Diana Ross", spotifyUrl: "https://open.spotify.com/search/Im%20Coming%20Out%20Diana%20Ross" },
+    { id: "t09", name: "24K Magic", artists: "Bruno Mars", spotifyUrl: "https://open.spotify.com/search/24K%20Magic%20Bruno%20Mars" },
+    { id: "t10", name: "Oh My Gosh", artists: "Basement Jaxx", spotifyUrl: "https://open.spotify.com/search/Oh%20My%20Gosh%20Basement%20Jaxx" },
+    { id: "t11", name: "Romeo", artists: "Basement Jaxx", spotifyUrl: "https://open.spotify.com/search/Romeo%20Basement%20Jaxx" },
+    { id: "t12", name: "Jump 'N Shout", artists: "Basement Jaxx", spotifyUrl: "https://open.spotify.com/search/Jump%20N%20Shout%20Basement%20Jaxx" },
+    { id: "t13", name: "Everybody Wants To Rule The World", artists: "Tears For Fears", spotifyUrl: "https://open.spotify.com/search/Everybody%20Wants%20To%20Rule%20The%20World%20Tears%20For%20Fears" },
+    { id: "t14", name: "I Believe in a Thing Called Love", artists: "The Darkness", spotifyUrl: "https://open.spotify.com/search/I%20Believe%20In%20A%20Thing%20Called%20Love%20The%20Darkness" },
+    { id: "t15", name: "Flowers - Sunship Remix", artists: "Sweet Female Attitude, Sunship", spotifyUrl: "https://open.spotify.com/search/Flowers%20Sunship%20Remix%20Sweet%20Female%20Attitude" },
+    { id: "t16", name: "Body Groove - Mix Mc Version", artists: "Architechs, Nay Nay", spotifyUrl: "https://open.spotify.com/search/Body%20Groove%20Architechs" },
+    { id: "t17", name: "Make Me Feel", artists: "Janelle Monáe", spotifyUrl: "https://open.spotify.com/search/Make%20Me%20Feel%20Janelle%20Monae" },
+    { id: "t18", name: "Groove Is in the Heart", artists: "Deee-Lite", spotifyUrl: "https://open.spotify.com/search/Groove%20Is%20In%20The%20Heart%20Deee-Lite" },
+    { id: "t19", name: "Don't Stop 'Til You Get Enough", artists: "Michael Jackson", spotifyUrl: "https://open.spotify.com/search/Dont%20Stop%20Til%20You%20Get%20Enough%20Michael%20Jackson" },
+    { id: "t20", name: "Pump Up The Jam", artists: "Technotronic", spotifyUrl: "https://open.spotify.com/search/Pump%20Up%20The%20Jam%20Technotronic" }
+];
+
+// ---- Voting table ----
 const PARTIES = ['Meanwhile', 'BRB'];
 const voteWrap = document.getElementById('voteTableWrap');
 const voteLoading = document.getElementById('voteLoading');
-let tracksData = [];
 let votesData = {};
 
 function renderTable() {
-    if (!tracksData.length) {
-        voteLoading.textContent = 'No tracks found in playlist';
-        return;
-    }
-
     // Sort: vetoed tracks (both parties) to bottom
     const sorted = [...tracksData].sort((a, b) => {
         const aVetoed = PARTIES.every(p => votesData[a.id] && votesData[a.id][p]);
@@ -1147,82 +1165,50 @@ function renderTable() {
 
     let html = '<table class="vote-table">';
     html += '<thead><tr>';
-    html += '<th>Track</th>';
-    PARTIES.forEach(p => {
-        html += '<th class="col-vote">' + p + '</th>';
-    });
+    html += '<th style="width:40px;">#</th><th>Track</th>';
+    PARTIES.forEach(p => { html += '<th class="col-vote">' + p + '</th>'; });
     html += '</tr></thead><tbody>';
 
-    sorted.forEach(track => {
+    sorted.forEach((track, i) => {
         const allVetoed = PARTIES.every(p => votesData[track.id] && votesData[track.id][p]);
         html += '<tr class="' + (allVetoed ? 'vetoed' : '') + '">';
-        
-        // Track cell
+        html += '<td style="color:var(--text-dim);font-size:0.8rem;text-align:center;">' + (i + 1) + '</td>';
         html += '<td><div class="vote-track-cell">';
-        html += '<div class="vote-art">';
-        if (track.artwork) {
-            html += '<img src="' + track.artwork + '" alt="" loading="lazy">';
-        }
-        html += '</div>';
         html += '<div class="vote-track-info">';
         html += '<div class="vote-track-name"><a href="' + track.spotifyUrl + '" target="_blank" rel="noopener">' + track.name + '</a></div>';
         html += '<div class="vote-artist">' + track.artists + '</div>';
         html += '</div></div></td>';
-
-        // Vote cells
         PARTIES.forEach(party => {
             const checked = votesData[track.id] && votesData[track.id][party] ? 'checked' : '';
-            html += '<td class="vote-cell">';
-            html += '<input type="checkbox" class="vote-cb" data-track="' + track.id + '" data-party="' + party + '" ' + checked + '>';
-            html += '</td>';
+            html += '<td class="vote-cell"><input type="checkbox" class="vote-cb" data-track="' + track.id + '" data-party="' + party + '" ' + checked + '></td>';
         });
-
         html += '</tr>';
     });
 
     html += '</tbody></table>';
     voteWrap.innerHTML = html;
 
-    // Attach checkbox listeners
     voteWrap.querySelectorAll('.vote-cb').forEach(cb => {
         cb.addEventListener('change', function() {
             const trackId = this.dataset.track;
             const party = this.dataset.party;
             const isOut = this.checked;
-
             if (!votesData[trackId]) votesData[trackId] = {};
             votesData[trackId][party] = isOut;
-
-            if (votesRef) {
-                votesRef.child(trackId).child(party).set(isOut);
-            }
-
-            // Re-render to move vetoed tracks
+            if (votesRef) votesRef.child(trackId).child(party).set(isOut);
             setTimeout(renderTable, 200);
         });
     });
 }
 
-// Fetch tracks from API
-fetch('/api/tracks')
-    .then(r => {
-        if (!r.ok) throw new Error('API error');
-        return r.json();
-    })
-    .then(data => {
-        tracksData = data.tracks || [];
-        renderTable();
-    })
-    .catch(err => {
-        console.warn('API fetch failed, using fallback', err);
-        voteLoading.textContent = 'Could not load playlist — check API configuration';
-    });
+// Initial render
+renderTable();
 
 // Listen for Firebase vote changes
 if (votesRef) {
     votesRef.on('value', snap => {
         votesData = snap.val() || {};
-        if (tracksData.length) renderTable();
+        renderTable();
     });
 }
 </script>
